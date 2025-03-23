@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Storage : IReadonlyStorage
 {
     private List<StorageCell> _cells;
-    
-    public event Action OnStorageChanged;
+    public event Action StorageChanged;
     
     public IReadOnlyList<IReadonlyCell> Cells => _cells;
     
@@ -14,24 +14,53 @@ public class Storage : IReadonlyStorage
         if(_cells == null)
             _cells = new List<StorageCell>();
 
-        bool isCellFound = false;
-        
-        foreach (var cell in _cells)
+        if (TryGetCell(item, out StorageCell cell))
         {
-            if (cell.Item.Id == item.Id)
-            {
-                isCellFound = true;
-                
-                if (cell.TryAddItem(item)) 
-                    OnStorageChanged?.Invoke();
-            }
+            if (cell.TryAddItem(item))
+                StorageChanged?.Invoke();
         }
-
-        if (isCellFound == false)
+        else
         {
             _cells.Add(new StorageCell(item));
-            
-            OnStorageChanged?.Invoke();
+
+            StorageChanged?.Invoke();
         }
+    }
+
+    public bool TryRemoveItem(Item item, int amount)
+    {
+        if(amount < 0)
+            return false;
+
+        if (TryGetCell(item, out StorageCell cell))
+        {
+            if (cell.TryRemoveItem(item, amount))
+            {
+                if (cell.Value == 0)
+                    _cells.Remove(cell);
+                
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public int GetNumberOfItem(Item item)
+    {
+        int numberOfItem = 0;
+        
+        if(_cells.Any(cell => cell.Item.Id == item.Id))
+            numberOfItem += _cells.First(cell => cell.Item.Id == item.Id).Value;
+        
+        return numberOfItem;
+    }
+
+    private bool TryGetCell(Item item , out StorageCell cell)
+    {
+        cell = null;
+        cell = _cells.FirstOrDefault(cell => cell.Item.Id == item.Id);
+        
+        return cell != null;
     }
 }

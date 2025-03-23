@@ -5,5 +5,5 @@ public interface IReadonlyStorage
 {
     public IReadOnlyList<IReadonlyCell> Cells { get; }
     
-    public event Action OnStorageChanged;
+    public event Action StorageChanged;
 }

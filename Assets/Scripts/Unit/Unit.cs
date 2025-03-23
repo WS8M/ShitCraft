@@ -1,74 +1,88 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    [SerializeField] private Base _base;
-    [SerializeField] private float _movingSpeed;
+    [SerializeField] private Mover _mover;
     [SerializeField] private GameObject _holdingPosition;
 
-    private Resource _target;
-    private bool _isEngaged;
-    private bool _isTakedResource;
-    
-    private Coroutine _moveCoroutine;
+    private bool _isBuilder;
+    private Vector3 _basePosition;
+    private ITarget _target;
+    private UnitStateMachine _stateMachine;
 
-    public event Action<Unit> Collected;
-    
-    public bool IsEngaged => _isEngaged;
-
-    private void Start()
+    public void Initialize(Vector3 basePosition)
     {
-        _isEngaged = false;
-        _isTakedResource = false;
+        _basePosition = basePosition;
+        _stateMachine = new UnitStateMachine(this, _mover);
+        _stateMachine.Enter<UnitStateIdle>();
+        _isBuilder = false;
+    }
+
+    public Vector3 BasePosition => _basePosition;
+    public Vector3 TargetPosition => _target.Position;
+    public ITarget Target => _target;
+    public IExitableState ActiveState => _stateMachine.ActiveState;
+    public bool IsHaveResource => _target != null;
+    public bool IsBuilder => _isBuilder;
+
+    public event Action<Unit> BringResource;
+    public event Action GotTask;
+
+    public void Update()
+    {
+        _stateMachine.Update();
     }
     
-    public bool TryTakeTask(Resource resource)
+    public bool TryTakeTask(ITarget target)
     {
-        if (_isEngaged)
+        if (_stateMachine.ActiveState is not UnitStateIdle)
             return false;
-
-        _target = resource;
-        _isEngaged = true;
         
-        _moveCoroutine = StartCoroutine(Moving(_target.transform.position));
 
+        if (target as Flag)
+        {
+            MakeUnitBuilder(target as Flag);
+        }
+        
+        _target = target;
+        GotTask?.Invoke();
         return true;
     }
 
-    private IEnumerator Moving(Vector3 target)
+    public Resource GiveResource()
     {
-        while (transform.position != target)
-        {
-            float deltaDistance = _movingSpeed * Time.deltaTime;
-            transform.position = Vector3.MoveTowards(transform.position, target, deltaDistance);
-            transform.LookAt(target);
+        var givenResource = _target as Resource;
+        _target = null;
+        return givenResource;
+    }
 
-            yield return null;
-        }
-        CheckPosition();
+    public void HandleCollectResource(Action onCollectResource)
+    {
+        if (TryTakeResource(_target as Resource)) 
+            onCollectResource?.Invoke();
+    }
+
+    public void InvokeBringResourceEvent() => 
+        BringResource?.Invoke(this);
+
+    private bool TryTakeResource(Resource resource)
+    {
+        if(resource == null)
+            return false;
+
+        var targetResource = _target as Resource;
+        if (targetResource == null)
+            return false;
+        
+        targetResource.Take(_holdingPosition.transform);
+        return true;
     }
     
-    private void CheckPosition()
+    private void MakeUnitBuilder(ITarget target)
     {
-        if (transform.position == _target.transform.position && _isTakedResource == false)
-        {
-            _isTakedResource = true;
-            _target.Take(_holdingPosition.transform);
-            
-            StopCoroutine(_moveCoroutine);
-            _moveCoroutine = StartCoroutine(Moving(_base.transform.position));
-        }
-        else if (transform.position == _base.transform.position && _isTakedResource)
-        {
-            _base.CollectResource(_target);
-            StopCoroutine(_moveCoroutine);
-            
-            _isTakedResource = false;
-            _isEngaged = false;
-            
-            Collected?.Invoke(this);
-        }
+        _isBuilder = true;
+        _target = target;
+        _stateMachine.Enter<UnitStateBuildNewBase,Vector3>(_target.Position);
     }
 }

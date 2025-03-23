@@ -1,57 +1,75 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class UnitAdministrator : MonoBehaviour
 {
+    [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private List<Unit> _units;
-    private Queue<Resource> _tasks = new();
-
-    private List<Unit> _freeUnits => _units.FindAll(unit => unit.IsEngaged == false);
-
-    public bool TryAddTask(Resource resource)
+    
+    private Flag _buildingFlag;
+    public event Action<Unit> UnitBroughtResource;
+    
+    public int NumberOfUnits => _units.Count;
+    private List<Unit> FreeUnits => _units.FindAll(unit => unit.ActiveState is UnitStateIdle);
+    
+    public bool TryAddTaskToUnit(ITarget target)
     {
-        foreach (var task in _tasks)
-            if(task.Id == resource.Id)
-                return false;
+        if (FreeUnits.Count == 0)
+            return false;
 
-        _tasks.Enqueue(resource);
-        AddTaskForUnit();
+        Unit unit = FreeUnits.First();
+
+        if (_buildingFlag != null)
+        {
+            unit.TryTakeTask(_buildingFlag);
+            _buildingFlag = null;
+            _units.Remove(unit);
+            return false;
+        }
         
+        if (!unit.TryTakeTask(target)) 
+            return false;
+        
+        MakeUnitEngage(unit);
         return true;
     }
 
-    private void AddTaskForUnit()
+    public void SetBuildingFlag(Flag flag)
     {
-        if (_freeUnits.Count == 0)
+        if(flag == null)
             return;
         
-        foreach (var unit in _freeUnits)
-        {
-            if (unit.TryTakeTask(_tasks.Peek()))
-            {
-                MakeUnitEngage(unit);
-                _tasks.Dequeue();
-                return;
-            }
-        }
+        _buildingFlag = flag;
+    }
+    
+    public void InitializeStartUnits(int numberOfUnits)
+    {
+        for(var i = 0; i < numberOfUnits; i++)
+            CreateNewUnit();
+    }
+
+    public void AddUnit(Unit unit)
+    {
+        _units.Add(unit);
+    }
+    
+    public void CreateNewUnit()
+    {
+        var unit = _unitSpawner.Spawn();
+        AddUnit(unit);
     }
 
     private void MakeUnitEngage(Unit unit)
     {
-        unit.Collected += MakeUnitFree;
+        unit.BringResource += UnitBroughtResource;
+        unit.BringResource += MakeUnitFree;
     }
-    
+
     private void MakeUnitFree(Unit unit)
     {
-        unit.Collected -= MakeUnitFree;
-        
-        if(_tasks.Count == 0)
-            return;
-        
-        if (unit.TryTakeTask(_tasks.Peek()))
-        {
-            _tasks.Dequeue();
-            MakeUnitEngage(unit);
-        }
+        unit.BringResource -= UnitBroughtResource;
+        unit.BringResource -= MakeUnitFree;
     }
 }

@@ -13,12 +13,12 @@ public class ScannerView : MonoBehaviour
         main.startLifetime = _duration;
         main.startSize = _scanner.ScanRadius;
         
-        _scanner.OnScan += PlayEffects;
+        _scanner.Scanned += PlayEffects;
     }
 
     private void OnDisable()
     {
-        _scanner.OnScan -= PlayEffects;
+        _scanner.Scanned -= PlayEffects;
     }
 
     private void PlayEffects()

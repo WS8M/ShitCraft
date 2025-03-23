@@ -6,6 +6,5 @@ public class ItemData : ScriptableObject
     [field: SerializeField] public int Id{ get; private set; }
     [field: SerializeField] public string Name{ get; private set; }
 
-    public Item GetItem() => new(this);
-    
+    public Item GetItem() => new Item(this);
 }

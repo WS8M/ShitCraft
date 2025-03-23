@@ -1,37 +1,34 @@
-using System;
+using TMPro;
 using UnityEngine;
 
 public class StorageView : MonoBehaviour
 {
     [SerializeField] private Base _base;
-    
+    [SerializeField] private TMP_Text _textField;
     private IReadonlyStorage _storage;
 
-    private void Initialize()
+    public void Initialize()
     {
-        _storage = _base.GetStorage();
-        _storage.OnStorageChanged += PrintInfo;
+        _storage = _base.Storage;
+        _storage.StorageChanged += UpdateView;
     }
 
-    private void Start()
-    {
-        Initialize();
-    }
     
     private void OnDisable()
     {
-        _storage.OnStorageChanged -= PrintInfo;
+        _storage.StorageChanged -= UpdateView;
     }
 
-    private void PrintInfo()
+    private void UpdateView()
     {
-        var text = "\n";
+        var text = "";
+        
         for (var index = 0; index < _storage.Cells.Count; index++)
         {
             var cell = _storage.Cells[index];
-            text += $"{cell.Item.Name} {cell.Value}\t";
+            text += $"{cell.Value}";
         }
 
-        Debug.Log(text);
+        _textField.text = text;
     }
 }

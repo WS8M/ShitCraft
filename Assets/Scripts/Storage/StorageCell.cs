@@ -20,4 +20,17 @@ public class StorageCell: IReadonlyCell
         _value += value;
         return true;
     }
+
+    public bool TryRemoveItem(Item item, int value = 1)
+    {
+        if (_item.Id != item.Id)
+            return false;
+        
+        if(_value < value)
+            return false;
+        
+        _value -= value;
+        
+        return true;
+    }
 }

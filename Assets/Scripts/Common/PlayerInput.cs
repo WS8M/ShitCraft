@@ -7,10 +7,10 @@ public class PlayerInput : MonoBehaviour
     private const string Vertical = nameof(Vertical);
     
     [SerializeField] private Camera _camera;
-    private bool _readyToCLear;
+    private bool _isReadyToCLear;
 
-    public event Action<RaycastHit> LeftClick;
-    public event Action<RaycastHit> RightClick;
+    public event Action<RaycastHit> ClickedInteractionButton;
+    public event Action<RaycastHit> ClickedCancelButton;
     
     public float HorizontalInput { get; private set; }
     public float VerticalInput { get; private set; }
@@ -18,12 +18,12 @@ public class PlayerInput : MonoBehaviour
     private void Update()
     {
         if(Input.GetKeyDown(KeyCode.Mouse0))
-            LeftClickAction();
+            ClickInteractionButton();
         
         if(Input.GetKeyDown(KeyCode.Mouse1))
-            RightClickAction();
+            ClickCancelButton();
         
-        if (_readyToCLear) 
+        if (_isReadyToCLear) 
             ClearInputs();
 
         ProcessInputs();
@@ -31,7 +31,7 @@ public class PlayerInput : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _readyToCLear = true;
+        _isReadyToCLear = true;
     }
     
     private void ProcessInputs()
@@ -45,24 +45,24 @@ public class PlayerInput : MonoBehaviour
         HorizontalInput = 0;
         VerticalInput = 0;
         
-        _readyToCLear = false;
+        _isReadyToCLear = false;
     }
 
-    public void LeftClickAction()
+    private void ClickInteractionButton()
     {
-        Ray castPoint = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray castPoint = _camera.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(castPoint, out RaycastHit hit))
-            LeftClick?.Invoke(hit);
+            ClickedInteractionButton?.Invoke(hit);
     }
     
-    private void RightClickAction()
+    private void ClickCancelButton()
     {
-        Ray castPoint = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray castPoint = _camera.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(castPoint, out RaycastHit hit))
         {
-            RightClick?.Invoke(hit);
+            ClickedCancelButton?.Invoke(hit);
         }
     }
 }

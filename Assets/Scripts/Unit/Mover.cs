@@ -30,14 +30,14 @@ public class Mover : MonoBehaviour
             yield return null;
         }
 
-        if (CheckPosition(targetPosition))
+        if (IsReached(targetPosition))
         {
             _moveCoroutine = null;
             onComplete?.Invoke(_unit);
         }
     }
     
-    private bool CheckPosition(Vector3 targetPosition)
+    private bool IsReached(Vector3 targetPosition)
     {
         return transform.position == targetPosition;
     }

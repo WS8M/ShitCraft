@@ -12,12 +12,12 @@ public class BaseStateCreateUnit : BaseState , IState
 
     public void Enter()
     {
-        Storage.StorageChanged += TryCreateNewUnit;
+        Storage.Changed += TryCreateNewUnit;
     }
 
     public override void Exit()
     {
-        Storage.StorageChanged -= TryCreateNewUnit;
+        Storage.Changed -= TryCreateNewUnit;
     }
     
     private void TryCreateNewUnit()

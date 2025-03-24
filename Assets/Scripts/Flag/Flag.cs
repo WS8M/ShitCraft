@@ -3,14 +3,14 @@ using UnityEngine;
 
 public class Flag: MonoBehaviour , IPoolable, ITarget
 {
+    public event Action<IPoolable> Removed;
+
+    public Vector3 Position => gameObject.transform.position;
+
     public void Initialize()
     {
         gameObject.SetActive(true);
     }
-
-    public event Action<IPoolable> Removed;
-
-    public Vector3 Position => gameObject.transform.position;
 
     public void DestroyObject()
     {

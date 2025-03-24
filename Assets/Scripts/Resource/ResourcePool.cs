@@ -11,6 +11,8 @@ public class ResourcePool
 
     private ObjectPool<IPoolable> _pool;
 
+    public event Action<Resource> Released;
+
     public void Initialize()
     {
         _pool = new ObjectPool<IPoolable>(
@@ -23,8 +25,6 @@ public class ResourcePool
             maxSize: _poolMaxSize);
     }
 
-    public event Action<Resource> Released;
-    
     public Resource GetObject(Vector3 position, Quaternion rotation)
     {
         Resource resource = _pool.Get() as Resource; 

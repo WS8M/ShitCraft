@@ -11,13 +11,8 @@ public class Unit : MonoBehaviour
     private ITarget _target;
     private UnitStateMachine _stateMachine;
 
-    public void Initialize(Vector3 basePosition)
-    {
-        _basePosition = basePosition;
-        _stateMachine = new UnitStateMachine(this, _mover);
-        _stateMachine.Enter<UnitStateIdle>();
-        _isBuilder = false;
-    }
+    public event Action<Unit> BringResource;
+    public event Action GotTask;
 
     public Vector3 BasePosition => _basePosition;
     public Vector3 TargetPosition => _target.Position;
@@ -26,14 +21,19 @@ public class Unit : MonoBehaviour
     public bool IsHaveResource => _target != null;
     public bool IsBuilder => _isBuilder;
 
-    public event Action<Unit> BringResource;
-    public event Action GotTask;
-
     public void Update()
     {
         _stateMachine.Update();
     }
-    
+
+    public void Initialize(Vector3 basePosition)
+    {
+        _basePosition = basePosition;
+        _stateMachine = new UnitStateMachine(this, _mover);
+        _stateMachine.Enter<UnitStateIdle>();
+        _isBuilder = false;
+    }
+
     public bool TryTakeTask(ITarget target)
     {
         if (_stateMachine.ActiveState is not UnitStateIdle)

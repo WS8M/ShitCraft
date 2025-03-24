@@ -15,14 +15,14 @@ public class FlagPlacer : MonoBehaviour
 
     private void OnEnable()
     {
-        _playerInput.LeftClick += OnLeftClick;
-        _playerInput.RightClick += OnRightClick;
+        _playerInput.ClickedInteractionButton += OnClickedInteractionButton;
+        _playerInput.ClickedCancelButton += OnClickedCancelButton;
     }
 
     private void OnDisable()
     {
-        _playerInput.LeftClick -= OnLeftClick;
-        _playerInput.RightClick -= OnRightClick;
+        _playerInput.ClickedInteractionButton -= OnClickedInteractionButton;
+        _playerInput.ClickedCancelButton -= OnClickedCancelButton;
     }
 
     private void Awake()
@@ -30,7 +30,7 @@ public class FlagPlacer : MonoBehaviour
         _flagPool.Initialize();
     }
 
-    private void OnLeftClick(RaycastHit hit)
+    private void OnClickedInteractionButton(RaycastHit hit)
     {
         if (_base is null)
         {
@@ -43,7 +43,7 @@ public class FlagPlacer : MonoBehaviour
         }
     }
 
-    private void OnRightClick(RaycastHit hit)
+    private void OnClickedCancelButton(RaycastHit hit)
     {
         _base = null;
         BaseDeselected?.Invoke();        
@@ -58,8 +58,7 @@ public class FlagPlacer : MonoBehaviour
             BaseSelected?.Invoke(_base.gameObject.transform.position);
         }
     }
-
-
+    
     private void PlaceFlag(RaycastHit hit)
     {
         if (hit.collider.TryGetComponent(out Ground ground) == false) 

@@ -5,7 +5,8 @@ using System.Linq;
 public class Storage : IReadonlyStorage
 {
     private List<StorageCell> _cells;
-    public event Action StorageChanged;
+    
+    public event Action Changed;
     
     public IReadOnlyList<IReadonlyCell> Cells => _cells;
     
@@ -17,13 +18,13 @@ public class Storage : IReadonlyStorage
         if (TryGetCell(item, out StorageCell cell))
         {
             if (cell.TryAddItem(item))
-                StorageChanged?.Invoke();
+                Changed?.Invoke();
         }
         else
         {
             _cells.Add(new StorageCell(item));
 
-            StorageChanged?.Invoke();
+            Changed?.Invoke();
         }
     }
 
@@ -39,6 +40,7 @@ public class Storage : IReadonlyStorage
                 if (cell.Value == 0)
                     _cells.Remove(cell);
                 
+                Changed?.Invoke();
                 return true;
             }
         }
@@ -58,7 +60,6 @@ public class Storage : IReadonlyStorage
 
     private bool TryGetCell(Item item , out StorageCell cell)
     {
-        cell = null;
         cell = _cells.FirstOrDefault(cell => cell.Item.Id == item.Id);
         
         return cell != null;

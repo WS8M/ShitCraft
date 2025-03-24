@@ -8,6 +8,7 @@ public class Base : MonoBehaviour
     [SerializeField] private ConstructionCostConfig _constructionCostConfig;
     [SerializeField] private StorageView _storageView;
     
+    private ResourceRegistrar _resourceRegistrar;
     private Storage _storage;
     private BaseStateMachine _baseStatemachine;
     private Flag _flag;
@@ -33,6 +34,7 @@ public class Base : MonoBehaviour
         _storage = new Storage();
         _scanner.StartScanning(AddingResource);
         _storageView.Initialize();
+        _resourceRegistrar = ResourceRegistrar.Instance;
         
         _baseStatemachine = new BaseStateMachine(this, _storage, _unitAdministrator);
         _baseStatemachine.Enter<BaseStateCreateUnit>();
@@ -72,11 +74,13 @@ public class Base : MonoBehaviour
     {
         foreach (var resource in resources)
         {
-            if (resource.IsEngaged)
+            if (_resourceRegistrar.IsEngaged(resource))
                 continue;
 
             if (_unitAdministrator.TryAddTaskToUnit(resource))
-                resource.MakeEngaged();
+            {
+                _resourceRegistrar.RegisterEngaged(resource);
+            }
         }
     }
 }
